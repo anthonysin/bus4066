@@ -1,0 +1,193 @@
+---
+title: "Assignment 1 - Group 2"
+output:
+  pdf_document: default
+  word_document: default
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[CO,CE]{Assignment 1 - Analysis}
+- \fancyfoot[CO,CE]{https://github.com/anthonysin/bus4066/}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy = TRUE)
+library(tidyverse)
+library(formatR)
+library(janitor) # janitor helps us clean datasets
+library(here) # here helps us to know where files are
+```
+
+## Load data
+
+```{r COVID-19}
+COVID19data <- readr::read_csv(file ="https://data.ontario.ca/dataset/c4022f0f-6f3d-4e16-bd28-5312333a4bac/resource/d0d6ccc7-fc60-4a18-ac96-7f9493e9f10e/download/inmatetesting.csv")
+```
+
+## 1 Summary
+
+```{r Data Summary}
+# The data consists of COVID19 testing done on inmates in the province of Ontario from 2020-05-08 to the current day. As team we have tested R out by performing different  functions on the data yielding different results. For the last few questions our analysis will reference the subset Toronto_data, which includes only the data from the Region of Toronto.
+```
+
+## 2 Structure
+
+```{r Returns the structure of the dataset}
+structure(COVID19data)
+```
+
+## 3 Variables
+
+```{r Returns all the column variable names in the dataset}
+names(COVID19data)
+```
+
+## 4 Rows
+
+```{r Returns the first 15 Rows in the dataset}
+head(COVID19data,n = 15)
+```
+
+## 5 Function
+
+```{r A Function which calculates all the modes of a vector}
+UserMode <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x,ux))
+  ux[tab == max(tab)]
+}
+
+UserMode(COVID19data$Cumulative_Number_of_Tests_as_of_Reported_Date)
+```
+
+## 6 Data Manipulation
+
+```{r Shows the rows where the cumulative number of tests reported is greater than or equal to 1000}
+Over1000 <- filter(COVID19data,Cumulative_Number_of_Tests_as_of_Reported_Date >= 1000)
+print(Over1000)
+```
+
+## 7 Dependent & Independent Variables
+
+```{r Creates a dataframe from the independent variable, the region Toronto, and a dependent variable, the cumulative number of tests, shows the first 15 rows}
+Toronto_data <- filter(COVID19data, Region == "Toronto")
+head(as.data.frame(Toronto_data %>% select(2,3)),15)
+```
+
+## 8 Removal (Missing)
+
+```{r Removes any rows with missing values}
+COVID19data[complete.cases(COVID19data), ] 
+```
+
+## 9 Removal (Duplicates)
+
+```{r Removal of any duplicate data of inmates that refused swabs}
+filter(COVID19data, is.na(COVID19data$Total_Inmates_that_Refused_Swab_as_of_Reported_Date))
+
+covid19data_unique <- unique(COVID19data)
+covid19data_duplicate <- duplicated(COVID19data)
+```
+
+## 10 Reorder Descending
+
+```{r Reorder rows in descending order based on the number of postive tests}
+COVID19data %>% arrange(desc(COVID19data$Cumulative_Number_of_Positive_Tests_as_of_Reported_Date))
+```
+
+## 11 Rename Columns
+
+```{r Rename the first and second column in the dataset}
+
+names(COVID19data)[1]
+names(COVID19data)[2] 
+
+names(COVID19data)[1] <- "Date"
+names(COVID19data)[2] <- "Location"
+
+names(COVID19data)[1]
+names(COVID19data)[2]
+
+names(COVID19data)[1] <- "Reported_Date"
+names(COVID19data)[2] <- "Region"
+```
+
+## 12 New Variable
+
+```{r Creates a boolean variable Danger_Zone based on there being higher positive tests than negative tests reported on a given date}
+COVID19data$In_Danger_Zone <- COVID19data$Cumulative_Number_of_Negative_Tests_as_of_Reported_Date < COVID19data$Cumulative_Number_of_Positive_Tests_as_of_Reported_Date
+
+head(COVID19data,15)
+```
+
+## 13 Training Set
+
+```{r Create a training set from the dataset}
+set.seed(1610)
+COVID19data %>% sample_frac(0.4, replace = FALSE)
+```
+
+## 14 Summary Statistics
+
+```{r Show the statistical summary of the dataset}
+summary(COVID19data)
+```
+
+## 15 Statistical Functions
+
+```{r Shows the mean, median, mode, and range of the cumulative number of tests reported}
+mean(COVID19data$Cumulative_Number_of_Tests_as_of_Reported_Date)
+median(COVID19data$Cumulative_Number_of_Tests_as_of_Reported_Date)
+UserMode(COVID19data$Cumulative_Number_of_Tests_as_of_Reported_Date)
+range(COVID19data$Cumulative_Number_of_Tests_as_of_Reported_Date)
+```
+
+## 16 Scatter Plot
+
+```{r Creates a scatter plot for the cumulative number of postive test reported and the date when reported from the subset, Toronto_data}
+ggplot(data = Toronto_data, aes(
+  x = Reported_Date, 
+  y = Cumulative_Number_of_Positive_Tests_as_of_Reported_Date)) + geom_point()
+```
+
+## 17 Bar Plot
+
+```{r Creates a Bar Plot using the cumulative number of positive tests from the subset, Toronto_data, subset using the first 10 rows.}
+barplot(
+  height = Toronto_data$Cumulative_Number_of_Positive_Tests_as_of_Reported_Date[1:10], 
+  names.arg = Toronto_data$Reported_Date[1:10],
+  xlab = "Date",
+  ylab = "Count",
+  col = "blue",
+  main = "Postive Tests", 
+  cex.names = 0.3)
+```
+
+## 18 Correlation
+```{r Shows the correlation between the number of positive cases and the number of inmates in medical isolation in the Toronto_data subset}
+cor(
+  Toronto_data$Cumulative_Number_of_Positive_Tests_as_of_Reported_Date, 
+  Toronto_data$Total_Inmates_on_Medical_Isolation_as_of_Reported_Date, 
+  method="pearson")
+```
+
+## 19 Least Square Linear Regression
+
+```{r Creates a Linear Regression Model using the Least Square method using the Toronto_data subset}
+linearMod <- lm(
+  Cumulative_Number_of_Positive_Tests_as_of_Reported_Date ~ 
+    Total_Inmates_on_Medical_Isolation_as_of_Reported_Date, data = Toronto_data)
+
+print(linearMod)
+summary(linearMod)
+
+ggplot(data = Toronto_data, aes(
+  x = Reported_Date, 
+  y = Cumulative_Number_of_Positive_Tests_as_of_Reported_Date)) + geom_point(colour = "red") + geom_smooth(method = "lm", fill = NA)
+```
+
+## 20 Conclusion 
+
+```{r Conclusion based on the Linear Regression}
+# The correlation between the two variables is 0.4384 so it shows medium correlation. The p-value: < 3.575e-12 which is statistically significant at the p < 0.001 cut-off level for every unit increase in the number of positive tests there is a 0.5721 increase in the number of inmates in isolation. Therefore, number of inmates in isolation increase with increasing positive tests.
+```
