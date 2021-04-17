@@ -11,7 +11,7 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80),echo = TRUE,tidy = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 80),echo = TRUE,tidy = TRUE)
 library(tidyverse)
 library(formatR)
 library(janitor) # janitor helps us clean datasets
@@ -70,7 +70,7 @@ filter(COVID19data,Cumulative_Number_of_Tests_as_of_Reported_Date >= 1000)
 
 ```{r Creates a dataframe from the independent variable, the region Toronto, and a dependent variable, the cumulative number of tests, shows the first 15 rows}
 Toronto_data <- filter(COVID19data, Region == "Toronto")
-head(select(Toronto_data,2,3),15)
+select(Toronto_data,2,3)
 ```
 
 ## 8 Removal (Missing)
