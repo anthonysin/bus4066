@@ -11,7 +11,7 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy = TRUE)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80),echo = TRUE,tidy = TRUE)
 library(tidyverse)
 library(formatR)
 library(janitor) # janitor helps us clean datasets
@@ -63,28 +63,28 @@ UserMode(COVID19data$Cumulative_Number_of_Tests_as_of_Reported_Date)
 ## 6 Data Manipulation
 
 ```{r Shows the rows where the cumulative number of tests reported is greater than or equal to 1000}
-Over1000 <- filter(COVID19data,Cumulative_Number_of_Tests_as_of_Reported_Date >= 1000)
-print(Over1000)
+filter(COVID19data,Cumulative_Number_of_Tests_as_of_Reported_Date >= 1000)
 ```
 
 ## 7 Dependent & Independent Variables
 
 ```{r Creates a dataframe from the independent variable, the region Toronto, and a dependent variable, the cumulative number of tests, shows the first 15 rows}
 Toronto_data <- filter(COVID19data, Region == "Toronto")
-head(as.data.frame(Toronto_data %>% select(2,3)),15)
+head(select(Toronto_data,2,3),15)
 ```
 
 ## 8 Removal (Missing)
 
 ```{r Removes any rows with missing values}
-COVID19data[complete.cases(COVID19data), ] 
+nrow(COVID19data)
+COVID19data <- COVID19data[complete.cases(COVID19data), ] 
+nrow(COVID19data)
 ```
 
 ## 9 Removal (Duplicates)
 
 ```{r Removal of any duplicate data of inmates that refused swabs}
 filter(COVID19data, is.na(COVID19data$Total_Inmates_that_Refused_Swab_as_of_Reported_Date))
-
 covid19data_unique <- unique(COVID19data)
 covid19data_duplicate <- duplicated(COVID19data)
 ```
@@ -117,7 +117,7 @@ names(COVID19data)[2] <- "Region"
 ```{r Creates a boolean variable Danger_Zone based on there being higher positive tests than negative tests reported on a given date}
 COVID19data$In_Danger_Zone <- COVID19data$Cumulative_Number_of_Negative_Tests_as_of_Reported_Date < COVID19data$Cumulative_Number_of_Positive_Tests_as_of_Reported_Date
 
-head(COVID19data,15)
+head(select(COVID19data,1,2,3,length(COVID19data)),15)
 ```
 
 ## 13 Training Set
@@ -152,18 +152,16 @@ ggplot(data = Toronto_data, aes(
 
 ## 17 Bar Plot
 
-```{r Creates a Bar Plot using the cumulative number of positive tests from the subset, Toronto_data, subset using the first 10 rows.}
-barplot(
-  height = Toronto_data$Cumulative_Number_of_Positive_Tests_as_of_Reported_Date[1:10], 
-  names.arg = Toronto_data$Reported_Date[1:10],
-  xlab = "Date",
-  ylab = "Count",
-  col = "blue",
-  main = "Postive Tests", 
-  cex.names = 0.3)
+```{r Creates a Bar Plot using the cumulative number of positive tests from the subset, Toronto_data}
+ggplot(
+  data = Toronto_data,
+  aes(
+    x = Reported_Date,
+    y = Cumulative_Number_of_Positive_Tests_as_of_Reported_Date)) + geom_col(fill = "blue")
 ```
 
 ## 18 Correlation
+
 ```{r Shows the correlation between the number of positive cases and the number of inmates in medical isolation in the Toronto_data subset}
 cor(
   Toronto_data$Cumulative_Number_of_Positive_Tests_as_of_Reported_Date, 
@@ -181,9 +179,11 @@ linearMod <- lm(
 print(linearMod)
 summary(linearMod)
 
-ggplot(data = Toronto_data, aes(
-  x = Reported_Date, 
-  y = Cumulative_Number_of_Positive_Tests_as_of_Reported_Date)) + geom_point(colour = "red") + geom_smooth(method = "lm", fill = NA)
+ggplot(
+  data = Toronto_data, 
+  aes(
+    x = Reported_Date, 
+    y = Cumulative_Number_of_Positive_Tests_as_of_Reported_Date)) + geom_point(colour = "red") + geom_smooth(method = "lm", fill = NA)
 ```
 
 ## 20 Conclusion 
